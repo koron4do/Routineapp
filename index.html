@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GYM LOG">
+<meta name="theme-color" content="#0A0A0A">
+<title>GYM LOG</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#0A0A0A;color:#E8E8E8;font-family:'DM Mono','Courier New',monospace;overscroll-behavior:none}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#2A2A2A}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+input::placeholder,textarea::placeholder{color:#3A3A3A}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:680px;margin:0 auto}
+.hdr{padding:env(safe-area-inset-top,14px) 18px 10px;background:rgba(10,10,10,0.97);border-bottom:2px solid var(--cdim,#333);position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);flex-shrink:0}
+.hdr-sub{font-size:9px;letter-spacing:4px;color:#333;margin-bottom:3px}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hdr-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;line-height:1;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scroll{flex:1;overflow-y:auto;padding:14px 16px calc(env(safe-area-inset-bottom,16px) + 68px);-webkit-overflow-scrolling:touch}
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:680px;margin:0 auto;background:rgba(10,10,10,0.97);border-top:1px solid #1A1A1A;display:flex;padding-bottom:env(safe-area-inset-bottom,0px);backdrop-filter:blur(14px);z-index:50}
+.nav-btn{flex:1;padding:9px 0 11px;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;cursor:pointer;transition:all .15s}
+.nav-icon{font-size:17px;line-height:1}
+.nav-lbl{font-size:7px;letter-spacing:2px;font-family:'DM Mono',monospace}
+.slbl{font-size:9px;letter-spacing:3px;color:#333;margin-bottom:8px}
+/* SESSION TRACKER CARDS */
+.sess-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.sess-card{border-radius:10px;padding:12px 10px;text-align:center;border:1px solid #1E1E1E;cursor:pointer;transition:all .18s;position:relative;overflow:hidden}
+.sess-card:active{transform:scale(0.97)}
+.sess-count{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;line-height:1;margin-bottom:2px}
+.sess-label{font-size:8px;letter-spacing:2px;color:#666;margin-bottom:6px}
+.sess-dots{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;min-height:10px}
+.sess-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* STREAK */
+.streak-bar{background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+/* EX TABLE */
+.ex-table{background:#111;border-radius:8px;border:1px solid #1A1A1A;overflow:hidden;margin-bottom:20px}
+.ex-thead{display:grid;grid-template-columns:1fr 36px 64px 56px 22px;padding:7px 12px;background:#0D0D0D;border-bottom:1px solid #1A1A1A}
+.ex-thead span{font-size:7px;letter-spacing:3px;color:#2A2A2A}
+.ex-row{display:grid;grid-template-columns:1fr 36px 64px 56px 22px;padding:10px 12px;align-items:center;border-bottom:1px solid #1A1A1A}
+.ex-row:last-child{border-bottom:none}
+.ex-tag{font-size:7px;letter-spacing:1px;padding:1px 4px;border-radius:2px;flex-shrink:0}
+.ex-name{font-size:11px;font-weight:500;color:#D8D8D8}
+.ex-note{font-size:9px;color:#3A3A3A;padding-left:48px;line-height:1.4;margin-top:2px}
+.ex-sets{font-size:16px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px}
+.ex-reps{font-size:9px;color:#777}
+.kg-btn{border-radius:5px;padding:4px 2px;cursor:pointer;width:100%;text-align:center;transition:all .15s;border:none;line-height:1.2;position:relative}
+.kg-val{font-size:12px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;display:block}
+.kg-sublbl{font-size:7px;letter-spacing:1px;font-family:'DM Mono',monospace;display:block;margin-top:1px}
+.prog-arrow{font-size:8px;position:absolute;top:2px;right:2px}
+.guide-arrow{font-size:13px;text-align:center;cursor:pointer}
+/* PROGRESS BADGE */
+.prog-badge{font-size:8px;padding:1px 5px;border-radius:10px;margin-left:4px;font-family:'DM Mono',monospace}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:100;display:flex;align-items:flex-end;animation:fi .18s ease}
+.panel{width:100%;max-width:680px;margin:0 auto;background:#0F0F0F;border-radius:14px 14px 0 0;border:1px solid #333;border-bottom:none;max-height:92dvh;overflow-y:auto;animation:su .22s ease}
+.phdr{position:sticky;top:0;background:#0F0F0F;padding:13px 18px 11px;border-bottom:1px solid #1A1A1A;display:flex;justify-content:space-between;align-items:flex-start;z-index:10}
+.pbody{padding:15px 18px 36px}
+.xbtn{background:#1A1A1A;border:none;color:#555;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flbl{font-size:8px;letter-spacing:3px;color:#3A3A3A;margin-bottom:7px}
+.kginput{width:100%;background:#161616;border:1px solid #2A2A2A;border-radius:6px;padding:11px;color:#FFF;font-size:30px;font-family:'Bebas Neue',sans-serif;letter-spacing:2px;outline:none;text-align:center}
+.kginput:focus{border-color:#555}
+.qbtns{display:flex;gap:5px;margin-top:6px}
+.qbtn{flex:1;padding:7px 0;border-radius:4px;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;border:none}
+.rpe-row{display:flex;gap:4px}
+.rpebtn{flex:1;padding:9px 0;border-radius:5px;font-size:13px;font-family:'Bebas Neue',sans-serif;cursor:pointer;transition:all .15s;border:none}
+.noteinput{width:100%;background:#161616;border:1px solid #1E1E1E;border-radius:6px;padding:11px 13px;color:#CCC;font-size:11px;font-family:'DM Mono',monospace;outline:none;resize:none;line-height:1.6}
+.noteinput:focus{border-color:#3A3A3A}
+.savebtn{width:100%;padding:13px;border-radius:6px;font-size:11px;letter-spacing:3px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .2s;border:none}
+.prevbox{border-radius:7px;padding:11px 13px;margin-bottom:14px;display:flex;gap:11px;align-items:flex-start}
+/* REST TIMER */
+.timer-bar{background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.timer-display{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px}
+.timer-btns{display:flex;gap:6px}
+.tbtn2{padding:6px 12px;border-radius:5px;border:none;cursor:pointer;font-size:9px;letter-spacing:2px;font-family:'DM Mono',monospace;transition:all .15s}
+/* HIST */
+.hist-item{background:#111;border:1px solid #1A1A1A;border-radius:7px;padding:11px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:10px}
+/* GUIDE */
+.mstag{padding:3px 8px;border-radius:3px;font-size:9px;letter-spacing:1px}
+.steprow{border-left:2px solid #1E1E1E;padding-left:11px;margin-bottom:8px}
+.steprow:last-child{margin-bottom:0}
+.stepnum{width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;margin-top:2px}
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tip-card{background:#111;border:1px solid #1A1A1A;border-radius:6px;padding:11px}
+.empty{background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:28px 18px;text-align:center}
+.btn{cursor:pointer;border:none;transition:all .16s}
+.note-banner{border-left:3px solid #555;border-radius:6px;padding:9px 12px;margin-bottom:12px;font-size:11px;color:#888;line-height:1.6;background:#111}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes su{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.pulsing{animation:pulse 1s infinite}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const DAYS = [
+  {id:0,day:"DÍA 1",label:"Pecho · Tríceps · Core",color:"#E84B2E",accent:"#FF6B4A",
+   note:"Volumen moderado. Core ligero al final para no fatigar el tronco antes de los compuestos.",
+   exercises:[
+    {name:"Press banca",sets:"4",reps:"5-8",note:"Fuerza base, progresión lineal",type:"compound",guide:"press-banca"},
+    {name:"Press inclinado mancuernas",sets:"3",reps:"8-12",note:"Mayor rango, activación clavicular",type:"compound",guide:"press-inclinado"},
+    {name:"Aperturas en cable",sets:"3",reps:"12-15",note:"Tensión constante en pectoral",type:"isolation",guide:"aperturas-cable"},
+    {name:"Fondos",sets:"3",reps:"6-10",note:"Añade lastre al dominar",type:"compound",guide:"fondos"},
+    {name:"Press polea tríceps",sets:"3",reps:"10-15",note:"Cuerda, codos pegados al torso",type:"isolation",guide:"polea-triceps"},
+    {name:"Plancha",sets:"3",reps:"30-50 seg",note:"",type:"core",guide:"plancha"},
+    {name:"Crunch con peso",sets:"3",reps:"15-20",note:"Disco en el pecho",type:"core",guide:"crunch-peso"},
+  ]},
+  {id:1,day:"DÍA 2",label:"Espalda · Bíceps",color:"#2563EB",accent:"#60A5FA",
+   note:"Combina bien — la espalda ya usa bíceps. No hay solapamiento de fatiga.",
+   exercises:[
+    {name:"Jalón al pecho",sets:"4",reps:"6-10",note:"Agarre prono, ancho de hombros",type:"compound",guide:"jalon-pecho"},
+    {name:"Remo con barra",sets:"4",reps:"6-10",note:"Carga máxima, espalda plana",type:"compound",guide:"remo-barra"},
+    {name:"Remo en polea baja",sets:"3",reps:"10-12",note:"Retracción escapular",type:"compound",guide:"remo-polea"},
+    {name:"Face pull con cuerda",sets:"3",reps:"15-20",note:"Salud del manguito rotador",type:"isolation",guide:"face-pull"},
+    {name:"Curl bíceps barra",sets:"3",reps:"8-12",note:"Base de bíceps",type:"isolation",guide:"curl-biceps"},
+    {name:"Curl alterno mancuernas",sets:"2",reps:"10-12",note:"Supinación completa",type:"isolation",guide:"curl-alterno"},
+    {name:"Curl martillo",sets:"2",reps:"10-12",note:"Braquial y braquiorradial",type:"isolation",guide:"curl-martillo"},
+  ]},
+  {id:2,day:"DÍA 3",label:"Pierna · Hombro · Core",color:"#059669",accent:"#34D399",
+   note:"El más largo. Hombro después de pierna para no comprometer la sentadilla.",
+   exercises:[
+    {name:"Sentadilla",sets:"4",reps:"5-8",note:"Progresión lineal",type:"compound",guide:"sentadilla"},
+    {name:"Peso muerto rumano",sets:"3",reps:"8-10",note:"Femoral e isquio pesado",type:"compound",guide:"peso-muerto"},
+    {name:"Prensa",sets:"3",reps:"10-15",note:"Volumen de cuádriceps",type:"compound",guide:"prensa"},
+    {name:"Curl femoral tumbado",sets:"3",reps:"10-12",note:"Excéntrica lenta 3-4 seg",type:"isolation",guide:"curl-femoral"},
+    {name:"Press militar barra",sets:"3",reps:"6-10",note:"Fuerza de hombro base",type:"compound",guide:"press-militar"},
+    {name:"Elevaciones laterales",sets:"4",reps:"12-20",note:"Baja muy lento — 3-4 seg",type:"isolation",guide:"elevaciones-lat"},
+    {name:"Elevaciones de piernas colgado",sets:"3",reps:"10-15",note:"Core inferior real",type:"core",guide:"elev-piernas"},
+    {name:"Plancha lateral",sets:"3",reps:"30 seg/lado",note:"Cadera alta",type:"core",guide:"plancha-lateral"},
+  ]},
+];
+
+const GUIDES = {
+“press-banca”:{muscles:[“Pectoral mayor”,“Deltoides anterior”,“Tríceps”],setup:“Agarre algo más ancho que los hombros. Escápulas retraídas y deprimidas contra el banco. Pies planos en el suelo. Arco lumbar natural.”,execution:[“Baja la barra controlado hasta rozar el pecho (~línea del pezón)”,“Codos a 45-75° del torso — no en T perfecta”,“Empuja explosivo hacia arriba y ligeramente atrás”,“Bloquea el codo arriba sin perder tensión”],errors:[“Escápulas sueltas → pierde transferencia de fuerza”,“Codos muy abiertos → sobrecarga el hombro”,“Rebotar el peso en el pecho”],breathing:“Inhala bajando (valsalva). Exhala con fuerza al empujar.”},
+“press-inclinado”:{muscles:[“Pectoral clavicular”,“Deltoides anterior”,“Tríceps”],setup:“Banco a 30-45°. Mancuernas en los muslos antes de subir. Retrae las escápulas.”,execution:[“Baja abriendo los codos a ~75°”,“Rango completo — mancuernas al nivel del pecho”,“Empuja juntando ligeramente las manos al subir”,“Al acabar: gira las mancuernas hacia el centro”],errors:[“Banco demasiado vertical → se convierte en press de hombros”,“No llegar abajo → pierdes el rango de hipertrofia”],breathing:“Inhala bajando. Exhala subiendo.”},
+“aperturas-cable”:{muscles:[“Pectoral mayor (fibras medias)”,“Coracobraquial”],setup:“Poleas altas a ambos lados. De pie en el centro, un pie adelantado. Ligera flexión de codo fija.”,execution:[“Lleva las manos al centro describiendo un gran arco”,“Mantén la flexión de codo constante”,“Imagina abrazar un árbol grande”,“Contrae el pectoral fuerte en el cruce”],errors:[“Doblar y estirar el codo — eso sería press”,“Peso excesivo que rompe el arco”],breathing:“Exhala cerrando los brazos.”},
+“fondos”:{muscles:[“Pectoral inferior”,“Tríceps”,“Deltoides anterior”],setup:“Agarre neutro en barras paralelas. Ligera inclinación hacia adelante para más pectoral.”,execution:[“Baja hasta que los hombros queden al nivel de los codos”,“Sube sin bloquear completamente el codo”,“Más inclinado = más pecho. Erguido = más tríceps”,“Añade lastre en cinturón al dominar”],errors:[“Cuerpo completamente vertical → dominan los tríceps”,“No bajar suficiente — rango parcial = menos hipertrofia”],breathing:“Inhala bajando. Exhala subiendo.”},
+“polea-triceps”:{muscles:[“Tríceps braquial (3 cabezas)”,“Ancóneo”],setup:“Polea alta con cuerda. Codos pegados al torso durante todo el movimiento.”,execution:[“Agarra la cuerda con las palmas hacia adentro”,“Empuja hacia abajo separando los extremos al llegar abajo”,“Extiende completamente el codo”,“Controla la vuelta — no dejes subir rápido”],errors:[“Codos que se separan del cuerpo → otros músculos roban”,“No extender del todo → pierdes la contracción máxima”],breathing:“Exhala empujando hacia abajo.”},
+“plancha”:{muscles:[“Recto abdominal”,“Transverso”,“Oblicuos”,“Glúteos”],setup:“Apóyate en antebrazos y puntas de pie. Cuerpo en línea recta de cabeza a talones.”,execution:[“Contrae glúteos y abdomen simultáneamente”,“Empuja el suelo con los antebrazos (activo, no pasivo)”,“Mira al suelo — cuello neutro”,“Respira normalmente, nunca aguantes el aire”],errors:[“Caer las caderas → lumbar en hiperextensión”,“Subir el culo → no trabajas el core real”],breathing:“Respiración diafragmática controlada.”},
+“crunch-peso”:{muscles:[“Recto abdominal”,“Oblicuos externos”],setup:“Tumbado, rodillas dobladas 90°. Disco o mancuerna en el pecho.”,execution:[“Curva solo el torso superior — no es un sit-up”,“Lleva el esternón hacia las rodillas, no la cabeza”,“Contrae fuerte arriba y baja lento (2-3 seg)”,“La zona lumbar no despega del suelo”],errors:[“Tirar del cuello con las manos”,“Subir toda la espalda — activa el psoasilíaco”],breathing:“Exhala contrayendo. Inhala bajando lento.”},
+“jalon-pecho”:{muscles:[“Dorsal ancho”,“Redondo mayor”,“Bíceps”,“Romboides”],setup:“Agarre prono a anchura de hombros o ligeramente más ancho. Siéntate con los muslos bajo el soporte. Ligera inclinación hacia atrás del torso.”,execution:[“Deprime las escápulas antes de tirar (activa el dorsal primero)”,“Tira la barra hacia la parte superior del pecho — no detrás del cuello”,“Los codos viajan hacia abajo y atrás”,“Controla la vuelta en 2-3 segundos — extensión completa”],errors:[“Tirar detrás del cuello — lesión cervical”,“Usar impulso del cuerpo hacia atrás para bajar la barra”,“No extender completamente los brazos arriba”],breathing:“Exhala tirando. Inhala subiendo controlado.”},
+“remo-barra”:{muscles:[“Dorsal ancho”,“Trapecio medio/inferior”,“Romboides”,“Bíceps”],setup:“Bisagra de cadera: espalda plana a ~45°. Rodillas ligeramente flexionadas.”,execution:[“Tira hacia el ombligo o zona baja del abdomen”,“Los codos pasan pegados a los costados”,“Aprieta los omóplatos al final”,“Baja controlado — la excéntrica construye masa”],errors:[“Usar impulso de caderas para subir la barra”,“Torso demasiado vertical → se convierte en dominada de pie”],breathing:“Exhala tirando. Inhala bajando.”},
+“remo-polea”:{muscles:[“Dorsal ancho”,“Trapecio”,“Bíceps”,“Romboides”],setup:“Sentado, pies en los apoyos. Agarre neutro o prono. Torso levemente adelante al inicio.”,execution:[“Empieza con brazos extendidos y espalda ligeramente adelante”,“Tira retrayendo primero las escápulas, luego los brazos”,“Mantén el torso erguido al final”,“Controla la excéntrica en 2-3 segundos”],errors:[“Balancear el tronco adelante y atrás”,“No retraer escapular — solo mueves los brazos”],breathing:“Exhala tirando hacia ti.”},
+“face-pull”:{muscles:[“Deltoides posterior”,“Trapecio”,“Manguito rotador”,“Romboides”],setup:“Polea alta a la altura de la cara. Cuerda. Da dos pasos atrás.”,execution:[“Tira hacia la frente separando los extremos de la cuerda”,“Los pulgares apuntan hacia atrás al final”,“Mantén los codos altos — a la altura de los hombros”,“Movimiento lento y controlado, nunca con impulso”],errors:[“Polea demasiado baja — cambia el músculo objetivo”,“Bajar los codos → pierde trabajo del deltoides posterior”],breathing:“Exhala tirando. Inhala soltando.”},
+“curl-biceps”:{muscles:[“Bíceps braquial”,“Braquial anterior”],setup:“De pie, agarre supino, ligeramente más ancho que los hombros.”,execution:[“Codos fijos a los lados del torso”,“Sube supinando completamente”,“Para 1 seg arriba apretando el bíceps”,“Baja en 2-3 seg — la excéntrica es clave”],errors:[“Mover los codos hacia adelante”,“Usar impulso de cadera”],breathing:“Exhala subiendo. Inhala bajando.”},
+“curl-alterno”:{muscles:[“Bíceps braquial”,“Braquial”],setup:“De pie o sentado. Agarre neutro al inicio.”,execution:[“Supina la muñeca mientras subes”,“El meñique ligeramente más alto al final”,“Alterna brazos controladamente”,“Mantén el torso completamente estático”],errors:[“No supinar la muñeca”,“Balancear el hombro para ayudar”],breathing:“Exhala subiendo cada repetición.”},
+“curl-martillo”:{muscles:[“Braquial”,“Braquiorradial”,“Bíceps (cabeza larga)”],setup:“Agarre neutro (pulgares arriba) en todo el recorrido. Sin supinación.”,execution:[“Sube manteniendo el pulgar apuntando al techo”,“No gires la muñeca”,“Codos pegados al torso”,“Contrae fuerte arriba”],errors:[“Supinar durante el movimiento”,“Codos hacia adelante al subir”],breathing:“Exhala subiendo.”},
+“sentadilla”:{muscles:[“Cuádriceps”,“Glúteos”,“Isquiotibiales”,“Core”],setup:“Barra en trampa alta o baja. Pies a anchura de hombros, puntas ~30° hacia afuera.”,execution:[“Inspira y haz bracing abdominal fuerte (Valsalva)”,“Rompe cadera y rodillas simultáneamente”,“Rodillas siguen la dirección de los pies”,“Profundidad mínima: muslos paralelos”,“Empuja el suelo hacia abajo al subir”],errors:[“Knees cave (valgo de rodilla)”,“Talones que se levantan — movilidad de tobillo”,“Butt wink excesivo”],breathing:“Inhala arriba con Valsalva. Exhala al pasar del punto más duro.”},
+“peso-muerto”:{muscles:[“Isquiotibiales”,“Glúteo mayor”,“Erector espinal”,“Core”],setup:“Barra cargada. De pie, agarre prono a anchura de hombros. Espalda completamente plana.”,execution:[“Bisagra de cadera — empuja el culo hacia atrás”,“La barra roza los muslos durante todo el recorrido”,“Espalda plana — imagina una regla en la lumbar”,“Baja hasta sentir tensión en el femoral”],errors:[“Redondear la espalda baja — peligro real de lesión”,“Doblar demasiado las rodillas”],breathing:“Inhala antes de bajar. Exhala subiendo.”},
+“prensa”:{muscles:[“Cuádriceps”,“Glúteos”,“Isquiotibiales”],setup:“Pies en la plataforma a anchura de hombros.”,execution:[“Baja hasta ~90° en la rodilla”,“Empuja con el talón y la parte media del pie”,“No bloquees completamente las rodillas arriba”,“Las rodillas siempre en la dirección de los pies”],errors:[“Rango parcial”,“Elevar el culo del asiento — lumbar en flexión bajo carga”],breathing:“Exhala empujando. Inhala bajando.”},
+“curl-femoral”:{muscles:[“Isquiotibiales”,“Gastrocnemio”],setup:“Tumbado boca abajo. Ajusta el rodillo sobre el tendón de Aquiles.”,execution:[“Sube el talón hacia el glúteo en arco completo”,“Contrae fuerte arriba — aguanta 1 segundo”,“Baja en 3-4 segundos (excéntrica muy lenta = más masa)”,“Caderas pegadas al banco”],errors:[“Levantar las caderas del banco”,“Bajar rápido — la excéntrica es la mitad del trabajo”],breathing:“Exhala subiendo. Inhala bajando lento.”},
+“press-militar”:{muscles:[“Deltoides anterior y medial”,“Tríceps”,“Trapecio superior”],setup:“De pie. Barra a la altura del pecho, agarre prono ligeramente más ancho que hombros.”,execution:[“Empuja la barra en línea recta hacia arriba”,“Mete la cabeza hacia atrás al pasar la barra”,“Extiende completamente los brazos arriba”,“Baja controlado hasta la clavícula”],errors:[“Arco lumbar excesivo”,“No extender del todo — pierdes rango”],breathing:“Exhala empujando. Inhala bajando.”},
+“elevaciones-lat”:{muscles:[“Deltoides medial”,“Supraespinoso”],setup:“De pie, mancuernas a los lados, ligera flexión de codo fija.”,execution:[“Sube los brazos lateralmente hasta la altura del hombro”,“Pulgares ligeramente hacia abajo (como vaciar agua)”,“Pausa 1 seg arriba”,“Baja muy lento — 3-4 seg”],errors:[“Subir por encima del hombro — el trapecio toma el control”,“Impulso de cadera o balanceo”],breathing:“Exhala subiendo.”},
+“elev-piernas”:{muscles:[“Recto abdominal inferior”,“Psoas”,“Iliaco”],setup:“Colgado de la barra. Brazos extendidos. Sin balanceo.”,execution:[“Sube las rodillas hacia el pecho (inicial) o piernas rectas (avanzado)”,“Movimiento completamente controlado”,“Contrae el abdomen antes de subir”,“Baja lento sin perder el control”],errors:[“Balanceo con impulso”,“No contraer el core antes de subir”],breathing:“Exhala subiendo las piernas.”},
+“plancha-lateral”:{muscles:[“Oblicuo externo e interno”,“Cuadrado lumbar”,“Glúteo medio”],setup:“Apóyate en un antebrazo (bajo el hombro) y en el borde externo del pie.”,execution:[“Eleva la cadera — cuerpo en línea diagonal”,“El brazo libre extendido hacia arriba”,“Contrae glúteo y oblicuo del lado de arriba”,“Respiración constante”],errors:[“Caer la cadera hacia el suelo”,“Rotar el torso hacia adelante”],breathing:“Respiración diafragmática. No aguantes el aire.”},
+};
+
+const TIPS=[
+{icon:“⚡”,title:“Progresión”,text:“Sube carga cuando completes todas las series en el rango alto. Sin progresión no hay masa.”},
+{icon:“🍗”,title:“Proteína”,text:“Mínimo 140–160g/día. A 76kg apunta a ~2g/kg. Prioridad absoluta.”},
+{icon:“😴”,title:“Descanso”,text:“7–9h de sueño. La masa se construye fuera del gym.”},
+{icon:“📅”,title:“Frecuencia”,text:“3 días es suficiente ahora. Añade un 4º día en 3–4 meses.”},
+];
+
+const TYPE_STYLE={
+compound:{bg:“rgba(255,255,255,0.08)”,label:“COMP.”},
+isolation:{bg:“rgba(255,255,255,0.03)”,label:“AISLE.”},
+core:{bg:“rgba(255,255,255,0.01)”,label:“CORE”},
+};
+
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
+function loadData(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch{return def;}}
+function saveData(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}}
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let S = {
+view:“routine”,      // routine | history | stats
+activeDay:0,
+log: loadData(“gymlog_v3”,{}),
+sessions: loadData(“gymsess_v1”,{0:[],1:[],2:[]}), // {dayId: [isoDateString,…]}
+modal:null,
+saved:false,
+timer:{active:false,secs:0,preset:90},
+timerInterval:null,
+};
+
+// ─── TIMER ────────────────────────────────────────────────────────────────────
+function startTimer(preset){
+clearInterval(S.timerInterval);
+S.timer={active:true,secs:preset,preset};
+S.timerInterval=setInterval(()=>{
+if(S.timer.secs>0){S.timer.secs–;renderTimerOnly();}
+else{clearInterval(S.timerInterval);S.timer.active=false;S.timer.secs=0;renderTimerOnly();try{if(window.navigator.vibrate)window.navigator.vibrate([200,100,200]);}catch{}}
+},1000);
+renderTimerOnly();
+}
+function stopTimer(){clearInterval(S.timerInterval);S.timer.active=false;S.timer.secs=0;renderTimerOnly();}
+function renderTimerOnly(){
+const el=document.getElementById(“timer-display”);
+const bar=document.getElementById(“timer-section”);
+if(!el||!bar) return;
+const m=Math.floor(S.timer.secs/60),s=S.timer.secs%60;
+const fmt=`${m}:${s.toString().padStart(2,"0")}`;
+const day=DAYS[S.activeDay];
+const done=!S.timer.active&&S.timer.secs===0&&S.timer.preset>0;
+el.textContent=fmt;
+el.style.color=S.timer.active?(S.timer.secs<=10?”#E84B2E”:day.accent):(done?”#4A9A4A”:”#444”);
+if(S.timer.active) el.classList.add(“pulsing”); else el.classList.remove(“pulsing”);
+}
+
+// ─── SESSIONS ─────────────────────────────────────────────────────────────────
+function addSession(dayId){
+const today=new Date().toISOString().split(“T”)[0];
+if(!S.sessions[dayId]) S.sessions[dayId]=[];
+S.sessions[dayId].push(today);
+saveData(“gymsess_v1”,S.sessions);
+render();
+}
+function removeLastSession(dayId){
+if(!S.sessions[dayId]||!S.sessions[dayId].length) return;
+S.sessions[dayId].pop();
+saveData(“gymsess_v1”,S.sessions);
+render();
+}
+
+// streak = consecutive weeks with at least 3 sessions total (any day)
+function calcStreak(){
+const all=Object.values(S.sessions).flat().map(d=>new Date(d)).sort((a,b)=>b-a);
+if(!all.length) return 0;
+// count distinct training days in last 7, 14, 21… days
+let streak=0;
+const now=new Date();
+for(let w=0;w<52;w++){
+const wStart=new Date(now); wStart.setDate(now.getDate()-(w+1)*7);
+const wEnd=new Date(now); wEnd.setDate(now.getDate()-w*7);
+const wSessions=all.filter(d=>d>=wStart&&d<wEnd);
+if(wSessions.length>=3) streak++; else break;
+}
+return streak;
+}
+
+function totalSessions(){return Object.values(S.sessions).flat().length;}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+const root=document.getElementById(“app”);
+const day=DAYS[S.activeDay];
+const loggedCount=DAYS.flatMap(d=>d.exercises).filter(ex=>S.log[ex.name]).length;
+const streak=calcStreak();
+const total=totalSessions();
+
+const viewColor = S.view===“history”?”#C084FC”:S.view===“stats”?”#F59E0B”:day.accent;
+const viewCdim = S.view===“history”?”#9333EA44”:S.view===“stats”?”#D9770644”:day.color+“44”;
+
+root.innerHTML=`
+
+  <div class="hdr" style="--cdim:${viewCdim}">
+    <div class="hdr-sub">GYM LOG · 76KG · 26 AÑOS</div>
+    <div class="hdr-row">
+      <div class="hdr-title" style="color:${viewColor}">
+        ${S.view==="history"?"HISTORIAL":S.view==="stats"?"ESTADÍSTICAS":`${day.day} — ${day.label}`}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${streak>0?`<div style="background:#D9770622;border:1px solid #D9770644;border-radius:5px;padding:4px 8px;font-size:9px;color:#F59E0B;letter-spacing:1px;white-space:nowrap">🔥${streak}sem</div>`:""}
+        <button class="btn" onclick="cycleView()" style="background:${S.view!=="routine"?"#1A1A2A":"#161616"};border:1px solid ${S.view!=="routine"?"#333":"#252525"};border-radius:5px;padding:5px 9px;color:${S.view!=="routine"?viewColor:"#555"};font-size:8px;letter-spacing:2px;font-family:'DM Mono',monospace">
+          ${S.view==="routine"?`📊 STATS`:S.view==="stats"?`📋 LOG`:S.view==="history"?`◈ RUTINA`:`◈`}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll">
+    ${S.view==="stats"?renderStats():S.view==="history"?renderHistory():renderRoutine(day)}
+  </div>
+
+${S.view===“routine”?`
+
+  <nav class="nav">
+    ${DAYS.map((d,i)=>`
+      <button class="nav-btn btn" onclick="setDay(${i})" style="color:${S.activeDay===i?d.accent:"#444"}">
+        <span class="nav-icon">${["◈","◇","◉"][i]}</span>
+        <span class="nav-lbl">${["DÍA 1","DÍA 2","DÍA 3"][i]}</span>
+        ${S.activeDay===i?`<span style="width:18px;height:2px;background:${d.accent};border-radius:2px;display:block;margin-top:1px"></span>`:`<span style="font-size:8px;color:#333">${(S.sessions[i]||[]).length}</span>`}
+      </button>
+    `).join("")}
+  </nav>`:""}
+
+${S.modal?renderModal():””}
+`;
+
+renderTimerOnly();
+const ov=root.querySelector(”.overlay”);
+if(ov) ov.addEventListener(“click”,function(e){if(e.target===this)closeModal();});
+}
+
+function renderStats(){
+const streak=calcStreak();
+const total=totalSessions();
+const thisWeek=(()=>{
+const now=new Date();
+const wStart=new Date(now); wStart.setDate(now.getDate()-7);
+return Object.values(S.sessions).flat().filter(d=>new Date(d)>=wStart).length;
+})();
+
+return `
+
+  <div style="margin-bottom:18px">
+    <div class="slbl">RESUMEN GLOBAL</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+      ${[
+        {v:total,l:"TOTAL",sub:"sesiones",c:"#F59E0B"},
+        {v:streak,l:"RACHA",sub:"semanas",c:"#E84B2E"},
+        {v:thisWeek,l:"ESTA SEMANA",sub:"sesiones",c:"#059669"},
+      ].map(x=>`
+        <div style="background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:12px 8px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:${x.c};letter-spacing:2px;line-height:1">${x.v}</div>
+          <div style="font-size:7px;letter-spacing:2px;color:#555;margin-top:2px">${x.l}</div>
+          <div style="font-size:8px;color:#3A3A3A">${x.sub}</div>
+        </div>`).join("")}
+    </div>
+  </div>
+
+  <div class="slbl">SESIONES POR DÍA</div>
+  <div class="sess-grid">
+    ${DAYS.map(d=>{
+      const sess=S.sessions[d.id]||[];
+      const last=sess.length?new Date(sess[sess.length-1]).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit"}):"—";
+      const dots=sess.slice(-20);
+      return `
+      <div class="sess-card" style="background:${d.color}0D;border-color:${d.color}33" onclick="">
+        <div class="sess-count" style="color:${d.accent}">${sess.length}</div>
+        <div class="sess-label">${d.day}</div>
+        <div style="font-size:8px;color:#3A3A3A;margin-bottom:6px">${d.label.split("·")[0].trim()}</div>
+        <div class="sess-dots">
+          ${dots.map(()=>`<div class="sess-dot" style="background:${d.color}"></div>`).join("")}
+        </div>
+        <div style="font-size:8px;color:#444;margin-top:5px;letter-spacing:1px">ÚLT. ${last}</div>
+        <div style="display:flex;gap:5px;margin-top:8px">
+          <button class="btn" onclick="event.stopPropagation();addSession(${d.id})" style="flex:1;background:${d.color}22;border:1px solid ${d.color}44;border-radius:4px;padding:5px;color:${d.accent};font-size:11px">+</button>
+          <button class="btn" onclick="event.stopPropagation();removeLastSession(${d.id})" style="flex:1;background:#161616;border:1px solid #2A2A2A;border-radius:4px;padding:5px;color:#444;font-size:11px">−</button>
+        </div>
+      </div>`;
+    }).join("")}
+  </div>
+
+${renderCalendar()}
+`;
+}
+
+function renderCalendar(){
+// Show last 8 weeks as a heatmap
+const allDates={};
+DAYS.forEach(d=>{
+(S.sessions[d.id]||[]).forEach(date=>{
+allDates[date]=(allDates[date]||[]);
+allDates[date].push(d.id);
+});
+});
+const days=[];
+const now=new Date();
+for(let i=55;i>=0;i–){
+const d=new Date(now); d.setDate(now.getDate()-i);
+const iso=d.toISOString().split(“T”)[0];
+const dayOfWeek=d.getDay();
+days.push({iso,dow:dayOfWeek,sessions:allDates[iso]||[]});
+}
+// group into weeks
+const weeks=[];
+let week=[];
+days.forEach((d,i)=>{
+week.push(d);
+if(d.dow===6||i===days.length-1){weeks.push(week);week=[];}
+});
+
+const dayLabels=[“D”,“L”,“M”,“X”,“J”,“V”,“S”];
+const colors=[DAYS[0].color,DAYS[1].color,DAYS[2].color];
+
+return `
+
+  <div style="margin-top:20px">
+    <div class="slbl">ACTIVIDAD · ÚLTIMAS 8 SEMANAS</div>
+    <div style="background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:12px;overflow-x:auto">
+      <div style="display:flex;gap:3px;min-width:fit-content">
+        ${weeks.map(wk=>`
+          <div style="display:flex;flex-direction:column;gap:3px">
+            ${wk.map(d=>{
+              const hasSess=d.sessions.length>0;
+              const bg=hasSess?(d.sessions.length>1?"#ffffff33":colors[d.sessions[0]]+"99"):"#1A1A1A";
+              const title=d.iso;
+              return `<div title="${title}" style="width:14px;height:14px;border-radius:3px;background:${bg};flex-shrink:0"></div>`;
+            }).join("")}
+          </div>`).join("")}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        ${DAYS.map(d=>`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:${d.color}99"></div><span style="font-size:8px;color:#555;letter-spacing:1px">${d.day}</span></div>`).join("")}
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:#1A1A1A"></div><span style="font-size:8px;color:#444;letter-spacing:1px">SIN SESIÓN</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderRoutine(day){
+const loggedToday=day.exercises.filter(ex=>S.log[ex.name]).length;
+const progress=Math.round(loggedToday/day.exercises.length*100);
+const sessCount=(S.sessions[day.id]||[]).length;
+
+return `
+
+  <!-- SESSION + PROGRESS ROW -->
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+    <div style="background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:11px;display:flex;align-items:center;gap:10px">
+      <div>
+        <div style="font-size:8px;letter-spacing:2px;color:#444;margin-bottom:2px">SESIONES</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${day.accent};letter-spacing:2px;line-height:1">${sessCount}</div>
+        <div style="font-size:8px;color:#3A3A3A;margin-top:2px">${day.day}</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;align-items:flex-end">
+        <button class="btn" onclick="addSession(${day.id})" style="background:${day.color}22;border:1px solid ${day.color}44;border-radius:5px;padding:6px 12px;color:${day.accent};font-size:18px;font-weight:bold;line-height:1">+</button>
+        <div style="font-size:8px;color:#3A3A3A;letter-spacing:1px">COMPLETAR SESIÓN</div>
+      </div>
+    </div>
+    <div style="background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:11px">
+      <div style="font-size:8px;letter-spacing:2px;color:#444;margin-bottom:6px">EJERCICIOS REGISTRADOS</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${loggedToday===day.exercises.length?"#4A9A4A":day.accent};letter-spacing:2px;line-height:1">${loggedToday}<span style="font-size:14px;color:#444">/${day.exercises.length}</span></div>
+      <div style="background:#1A1A1A;border-radius:4px;height:4px;margin-top:8px;overflow:hidden">
+        <div style="height:100%;width:${progress}%;background:${progress===100?"#4A9A4A":day.color};border-radius:4px;transition:width .4s"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REST TIMER -->
+
+  <div id="timer-section" style="background:#111;border:1px solid #1A1A1A;border-radius:8px;padding:11px 14px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div>
+        <div style="font-size:8px;letter-spacing:2px;color:#444;margin-bottom:2px">DESCANSO ENTRE SERIES</div>
+        <div id="timer-display" class="timer-display" style="color:#444">0:00</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;gap:5px">
+          ${[60,90,120,180].map(t=>`<button class="btn tbtn2" onclick="startTimer(${t})" style="background:${S.timer.preset===t&&S.timer.active?"${day.color}33":"#161616"};border:1px solid ${S.timer.preset===t&&S.timer.active?day.color+"55":"#252525"};color:${S.timer.preset===t&&S.timer.active?day.accent:"#555"}">${t/60<1?t+"s":t/60+"m"}</button>`).join("")}
+        </div>
+        <button class="btn" onclick="stopTimer()" style="background:#1A1A1A;border:1px solid #252525;border-radius:5px;padding:5px;color:#444;font-size:8px;letter-spacing:2px;font-family:'DM Mono',monospace;width:100%">PARAR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-banner" style="border-left-color:${day.color};background:${day.color}0E">${day.note}</div>
+  <div class="slbl" style="margin-bottom:6px">TOCA KG PARA REGISTRAR · › PARA GUÍA</div>
+  <div class="ex-table">
+    <div class="ex-thead">
+      <span>EJERCICIO</span><span>SER.</span><span>REPS</span><span>KG</span><span></span>
+    </div>
+    ${day.exercises.map((ex,i)=>{
+      const entry=S.log[ex.name];
+      const ts=TYPE_STYLE[ex.type];
+      const tagColor=ex.type==="compound"?day.accent:ex.type==="core"?"#555":"#3A3A3A";
+      const tagBg=ex.type==="compound"?day.color+"1E":"#1A1A1A";
+      // Progress indicator vs last entry
+      const prevKg=entry?.prevKg;
+      const curKg=entry?.kg;
+      const progIcon=prevKg&&curKg?(parseFloat(curKg)>parseFloat(prevKg)?"↑":parseFloat(curKg)<parseFloat(prevKg)?"↓":"="):"";
+      const progColor=progIcon==="↑"?"#4A9A4A":progIcon==="↓"?"#E84B2E":"#777";
+      return `
+      <div class="ex-row" style="background:${ts.bg}${i===day.exercises.length-1?";border-bottom:none":""}">
+        <div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:${ex.note?"3px":"0"}">
+            <span class="ex-tag" style="color:${tagColor};background:${tagBg}">${ts.label}</span>
+            <span class="ex-name">${ex.name}</span>
+            ${progIcon?`<span style="font-size:9px;color:${progColor};font-weight:bold">${progIcon}</span>`:""}
+          </div>
+          ${ex.note?`<div class="ex-note">${ex.note}</div>`:""}
+        </div>
+        <div class="ex-sets" style="color:${day.accent}">${ex.sets}</div>
+        <div class="ex-reps">${ex.reps}</div>
+        <button class="kg-btn btn" onclick="openLog('${encodeURIComponent(ex.name)}',${i})"
+          style="background:${entry?day.color+"22":"#161616"};border:1px solid ${entry?day.color+"55":"#252525"};color:${entry?day.accent:"#3A3A3A"}">
+          ${entry?.kg
+            ?`<span class="kg-val" style="color:${day.accent}">${entry.kg}</span><span class="kg-sublbl" style="color:${day.accent}88">KG</span>`
+            :`<span style="font-size:11px;letter-spacing:2px">+KG</span>`}
+        </button>
+        <div class="guide-arrow" style="color:${GUIDES[ex.guide]?day.accent:"#1E1E1E"}" onclick="${GUIDES[ex.guide]?`openGuide('${encodeURIComponent(ex.name)}',${i})`:""}">›</div>
+      </div>`;
+    }).join("")}
+  </div>
+
+  <div class="slbl">CLAVES PARA GANAR MASA</div>
+  <div class="tips-grid">
+    ${TIPS.map(t=>`
+      <div class="tip-card">
+        <div style="font-size:17px;margin-bottom:4px">${t.icon}</div>
+        <div style="font-size:8px;letter-spacing:2px;color:#4A4A4A;margin-bottom:3px">${t.title}</div>
+        <div style="font-size:10px;color:#666;line-height:1.6">${t.text}</div>
+      </div>`).join("")}
+  </div>`;
+}
+
+function renderHistory(){
+const loggedCount=DAYS.flatMap(d=>d.exercises).filter(ex=>S.log[ex.name]).length;
+if(!loggedCount) return ` <div class="empty"> <div style="font-size:26px;margin-bottom:10px">📋</div> <div style="font-size:11px;color:#444;line-height:1.8">Aún no hay registros guardados.<br>Ve a la rutina y toca <span style="color:#666">+KG</span>.</div> </div>`;
+return DAYS.map(d=>{
+const dayLogs=d.exercises.filter(ex=>S.log[ex.name]);
+if(!dayLogs.length) return “”;
+return `<div style="margin-bottom:18px"> <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"> <div style="width:3px;height:13px;background:${d.color};border-radius:2px"></div> <div style="font-size:9px;letter-spacing:3px;color:${d.accent}">${d.day} · ${d.label}</div> </div> ${dayLogs.map(ex=>{ const entry=S.log[ex.name]; const exIdx=d.exercises.indexOf(ex); const progIcon=entry.prevKg&&entry.kg?(parseFloat(entry.kg)>parseFloat(entry.prevKg)?"↑":parseFloat(entry.kg)<parseFloat(entry.prevKg)?"↓":"="):""; const progColor=progIcon==="↑"?"#4A9A4A":progIcon==="↓"?"#E84B2E":"#777"; return`
+<div class="hist-item">
+<div style="flex:1;min-width:0">
+<div style="font-size:11px;font-weight:500;color:#CCC;margin-bottom:4px">${ex.name}</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+${entry.kg?`<span style="font-size:15px;font-family:'Bebas Neue',sans-serif;color:${d.accent};letter-spacing:1px">${entry.kg} KG</span>`:””}
+${progIcon?`<span style="font-size:11px;color:${progColor};font-weight:bold">${progIcon} ${entry.prevKg?"vs "+entry.prevKg+"kg":""}</span>`:””}
+${entry.rpe?`<span style="font-size:10px;color:#666">RPE ${entry.rpe}</span>`:””}
+<span style="font-size:9px;color:#3A3A3A">${entry.date||””}</span>
+</div>
+${entry.note?`<div style="font-size:10px;color:#666;margin-top:5px;line-height:1.5;border-left:2px solid ${d.color}44;padding-left:7px">${entry.note}</div>`:””}
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+<button class="btn" onclick="openLogByDay(${d.id},${exIdx})" style="background:${d.color}18;border:1px solid ${d.color}38;border-radius:4px;padding:5px 8px;color:${d.accent};font-size:8px;letter-spacing:1px;font-family:'DM Mono',monospace">EDITAR</button>
+<button class="btn" onclick="clearEntry('${encodeURIComponent(ex.name)}')" style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:4px;padding:5px 8px;color:#444;font-size:10px;font-family:'DM Mono',monospace">×</button>
+</div>
+</div>`; }).join("")} </div>`;
+}).join(””);
+}
+
+function renderModal(){
+const m=S.modal;
+if(!m) return “”;
+if(m.type===“log”) return renderLogModal(m);
+if(m.type===“guide”) return renderGuideModal(m);
+return “”;
+}
+
+function renderLogModal(m){
+const entry=S.log[m.ex.name]||{};
+const kg=m.kg!==undefined?m.kg:(entry.kg||””);
+const rpe=m.rpe!==undefined?m.rpe:(entry.rpe||””);
+const note=m.note!==undefined?m.note:(entry.note||””);
+const hasPrev=!!(entry.kg||entry.note);
+return `
+
+  <div class="overlay">
+    <div class="panel" style="border-color:${m.dayColor}44">
+      <div class="phdr">
+        <div>
+          <div style="font-size:8px;letter-spacing:3px;color:#3A3A3A;margin-bottom:3px">REGISTRAR</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${m.dayAccent};letter-spacing:1px;line-height:1">${m.ex.name}</div>
+          <div style="font-size:9px;color:#444;margin-top:2px">${m.ex.sets} series · ${m.ex.reps} reps</div>
+        </div>
+        <button class="xbtn" onclick="closeModal()">×</button>
+      </div>
+      <div class="pbody">
+        ${hasPrev?`
+        <div class="prevbox" style="background:${m.dayColor}12;border:1px solid ${m.dayColor}30">
+          <div style="font-size:17px;flex-shrink:0">📋</div>
+          <div style="min-width:0">
+            <div style="font-size:8px;letter-spacing:2px;color:#3A3A3A;margin-bottom:3px">ÚLTIMO REGISTRO · ${entry.date||"—"}</div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              ${entry.kg?`<span style="font-size:14px;font-family:'Bebas Neue',sans-serif;color:${m.dayAccent}">${entry.kg} KG</span>`:""}
+              ${entry.rpe?`<span style="font-size:10px;color:#777">RPE ${entry.rpe}</span>`:""}
+            </div>
+            ${entry.note?`<div style="font-size:10px;color:#666;margin-top:3px;line-height:1.4">${entry.note}</div>`:""}
+          </div>
+        </div>`:""}
+
+```
+    <div style="margin-bottom:13px">
+      <div class="flbl">CARGA (KG)</div>
+      <input class="kginput" id="kg-input" type="number" value="${kg}" placeholder="0" style="border-color:${kg?"#3A3A3A":"#1E1E1E"}">
+      <div class="qbtns">
+        ${[-5,-2.5,-1.25,1.25,2.5,5].map(d=>`
+          <button class="qbtn btn" onclick="adjustKg(${d})"
+            style="background:${d>0?"#1A2A1A":"#1A1A2A"};color:${d>0?"#4A9A4A":"#5A5A9A"};border:1px solid ${d>0?"#2A4A2A":"#2A2A4A"}">
+            ${d>0?"+"+d:d}
+          </button>`).join("")}
+      </div>
+    </div>
+
+    <div style="margin-bottom:13px">
+      <div class="flbl">RPE (ESFUERZO 6–10)</div>
+      <div class="rpe-row">
+        ${[6,7,8,9,10].map(v=>`
+          <button class="rpebtn btn" onclick="setRpe('${v}')"
+            style="background:${rpe===String(v)?m.dayColor+"33":"#161616"};border:1px solid ${rpe===String(v)?m.dayColor+"55":"#1E1E1E"};color:${rpe===String(v)?m.dayAccent:"#555"}">
+            ${v}
+          </button>`).join("")}
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px">
+      <div class="flbl">ANOTACIÓN</div>
+      <textarea id="note-input" class="noteinput" rows="3" placeholder="Subí 2.5kg vs la semana pasada, último set al fallo...">${note}</textarea>
+    </div>
+
+    <button class="savebtn btn" onclick="saveEntry()"
+      style="background:${S.saved?"#1A3A1A":m.dayColor+"22"};color:${S.saved?"#4A9A4A":m.dayAccent};border:1px solid ${S.saved?"#2A5A2A":m.dayColor+"44"}">
+      ${S.saved?"✓ GUARDADO":"GUARDAR REGISTRO"}
+    </button>
+  </div>
+</div>
+```
+
+  </div>`;
+}
+
+function renderGuideModal(m){
+const g=GUIDES[m.ex.guide];
+if(!g) return “”;
+const ts=TYPE_STYLE[m.ex.type];
+return `
+
+  <div class="overlay">
+    <div class="panel" style="border-color:${m.dayColor}38">
+      <div class="phdr">
+        <div>
+          <div style="font-size:8px;letter-spacing:3px;color:#3A3A3A;margin-bottom:3px">${ts.label} · ${m.ex.sets} SERIES · ${m.ex.reps} REPS</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:21px;color:${m.dayAccent};letter-spacing:1px;line-height:1">${m.ex.name}</div>
+        </div>
+        <button class="xbtn" onclick="closeModal()">×</button>
+      </div>
+      <div class="pbody">
+        <div style="margin-bottom:13px">
+          <div class="slbl">MÚSCULOS</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            ${g.muscles.map((mu,i)=>`<span class="mstag" style="background:${i===0?m.dayColor+"20":"#181818"};color:${i===0?m.dayAccent:"#555"};border:1px solid ${i===0?m.dayColor+"38":"#242424"}">${mu}</span>`).join("")}
+          </div>
+        </div>
+        <div style="background:#161616;border-radius:8px;padding:12px 14px;margin-bottom:13px;border-left:3px solid ${m.dayColor}">
+          <div class="slbl" style="margin-bottom:6px">POSICIÓN INICIAL</div>
+          <div style="font-size:11px;color:#999;line-height:1.7">${g.setup}</div>
+        </div>
+        <div style="margin-bottom:13px">
+          <div class="slbl" style="margin-bottom:9px">EJECUCIÓN</div>
+          ${g.execution.map((step,i)=>`
+            <div class="steprow">
+              <div style="display:flex;gap:8px;align-items:flex-start">
+                <span class="stepnum" style="background:${m.dayColor}1E;color:${m.dayAccent}">${i+1}</span>
+                <span style="font-size:11px;color:#B0B0B0;line-height:1.6">${step}</span>
+              </div>
+            </div>`).join("")}
+        </div>
+        <div style="background:#150000;border:1px solid #3A0F0F;border-radius:8px;padding:12px 14px;margin-bottom:13px">
+          <div style="font-size:8px;letter-spacing:3px;color:#4A1818;margin-bottom:8px">⚠ ERRORES FRECUENTES</div>
+          ${g.errors.map((e,i)=>`<div style="font-size:11px;color:#B86060;line-height:1.6;${i<g.errors.length-1?"padding-bottom:5px;margin-bottom:5px;border-bottom:1px solid #280E0E":""}">— ${e}</div>`).join("")}
+        </div>
+        <div style="background:#001410;border:1px solid #0E3828;border-radius:8px;padding:11px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:center">
+          <div style="font-size:19px">🌬</div>
+          <div>
+            <div style="font-size:8px;letter-spacing:3px;color:#1A4A38;margin-bottom:3px">RESPIRACIÓN</div>
+            <div style="font-size:11px;color:#4A9A78;line-height:1.5">${g.breathing}</div>
+          </div>
+        </div>
+        <button class="btn" onclick="switchToLog()" style="width:100%;padding:11px;background:${m.dayColor}18;color:${m.dayAccent};border:1px solid ${m.dayColor}38;border-radius:6px;font-size:10px;letter-spacing:3px;font-family:'DM Mono',monospace;margin-bottom:9px">
+          + REGISTRAR KG Y NOTAS
+        </button>
+        <button class="btn" onclick="closeModal()" style="width:100%;padding:9px;background:transparent;color:#444;border:1px solid #1E1E1E;border-radius:6px;font-size:9px;letter-spacing:3px;font-family:'DM Mono',monospace">
+          ← VOLVER
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── ACTIONS ──────────────────────────────────────────────────────────────────
+function setDay(i){S.activeDay=i;render();}
+function cycleView(){S.view=S.view===“routine”?“stats”:S.view===“stats”?“history”:“routine”;render();}
+
+function openLog(encodedName,exIdx){
+const day=DAYS[S.activeDay];
+const ex=day.exercises[exIdx];
+S.modal={type:“log”,ex,dayColor:day.color,dayAccent:day.accent};
+S.saved=false; render();
+}
+function openLogByDay(dayId,exIdx){
+const day=DAYS[dayId];
+const ex=day.exercises[exIdx];
+S.modal={type:“log”,ex,dayColor:day.color,dayAccent:day.accent};
+S.saved=false; render();
+}
+function openGuide(encodedName,exIdx){
+const day=DAYS[S.activeDay];
+const ex=day.exercises[exIdx];
+if(!GUIDES[ex.guide]) return;
+S.modal={type:“guide”,ex,dayColor:day.color,dayAccent:day.accent};
+render();
+}
+function switchToLog(){
+const m=S.modal;
+if(!m) return;
+S.modal={type:“log”,ex:m.ex,dayColor:m.dayColor,dayAccent:m.dayAccent};
+S.saved=false; render();
+}
+function closeModal(){S.modal=null; render();}
+
+function adjustKg(delta){
+const input=document.getElementById(“kg-input”);
+if(!input) return;
+const val=Math.max(0,(parseFloat(input.value)||0)+delta);
+input.value=val%1===0?val.toString():val.toFixed(2);
+if(S.modal) S.modal.kg=input.value;
+}
+function setRpe(v){
+if(!S.modal) return;
+const cur=S.modal.rpe!==undefined?S.modal.rpe:(S.log[S.modal.ex.name]?.rpe||””);
+S.modal.rpe=cur===v?””:v;
+render();
+}
+function saveEntry(){
+const m=S.modal;
+if(!m) return;
+const kgInput=document.getElementById(“kg-input”);
+const noteInput=document.getElementById(“note-input”);
+const kg=kgInput?kgInput.value:(m.kg||””);
+const rpe=m.rpe!==undefined?m.rpe:(S.log[m.ex.name]?.rpe||””);
+const note=noteInput?noteInput.value:(m.note||””);
+const prevEntry=S.log[m.ex.name];
+const entry={
+kg,rpe,note,
+prevKg:prevEntry?.kg||null,
+date:new Date().toLocaleDateString(“es-ES”,{day:“2-digit”,month:“2-digit”,year:“2-digit”}),
+ts:Date.now(),
+};
+S.log[m.ex.name]=entry;
+saveData(“gymlog_v3”,S.log);
+S.saved=true; render();
+setTimeout(()=>{S.modal=null;render();},900);
+}
+function clearEntry(encodedName){
+const name=decodeURIComponent(encodedName);
+if(confirm(`¿Borrar registro de "${name}"?`)){
+delete S.log[name];
+saveData(“gymlog_v3”,S.log);
+render();
+}
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+
+</body>
+</html>
